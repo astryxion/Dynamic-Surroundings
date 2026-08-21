@@ -149,21 +149,21 @@ public class ItemLibrary implements IItemLibrary {
     }
 
     private ItemClassType resolveClassType(ItemStack stack) {
-        if (this.tagLibrary.is(ItemEffectTags.AXES, stack))
+        if (stack.getItem() instanceof AxeItem) // check itemclass directly, no need to do this.
             return ItemClassType.AXE;
-        if (this.tagLibrary.is(ItemEffectTags.BOOKS, stack))
+        if (this.tagLibrary.is(ItemEffectTags.BOOKS, stack)) // in this case i have no idea
             return ItemClassType.BOOK;
-        if (this.tagLibrary.is(ItemEffectTags.BOWS, stack))
+        if (stack.getItem() instanceof BowItem)
             return ItemClassType.BOW;
-        if (this.tagLibrary.is(ItemEffectTags.POTIONS, stack))
+        if (this.tagLibrary.is(ItemEffectTags.POTIONS, stack)) // i think potions do also have an item class
             return ItemClassType.POTION;
-        if (this.tagLibrary.is(ItemEffectTags.CROSSBOWS, stack))
+        if (stack.getItem() instanceof CrossbowItem)
             return ItemClassType.CROSSBOW;
-        if (this.tagLibrary.is(ItemEffectTags.SHIELDS, stack))
+        if (stack.getItem() instanceof ShieldItem)
             return ItemClassType.SHIELD;
-        if (this.tagLibrary.is(ItemEffectTags.SWORDS, stack))
+        if (stack.getItem() instanceof SwordItem)
             return ItemClassType.SWORD;
-        if (this.tagLibrary.is(ItemEffectTags.TOOLS, stack))
+        if (stack.getItem() instanceof TieredItem || stack.getItem() instanceof ShearsItem) // this covers all other item tool types, even if they are not vanilla like saws, shears, etc
             return ItemClassType.TOOL;
 
         return ItemClassType.NONE;
