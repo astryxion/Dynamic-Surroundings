@@ -3,6 +3,7 @@ package org.orecruncher.dsurround.sound;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.client.resources.sounds.ElytraOnPlayerSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.resources.sounds.TickableSoundInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
@@ -68,7 +69,26 @@ public final class SoundInstanceHandler {
             return false;
 
         final ResourceLocation id = theSound.getLocation();
-        return isSoundBlocked(id) || isSoundCulledLogical(id);
+        if (isSoundBlocked(id))
+            return true;
+
+        // Interval culling is meant for spammy one-shots. Applying it to a looping or
+        // tickable instance cancels that instance permanently, so a distant machine
+        // would stay silent even after the listener walks into range.
+        if (isPersistentSound(theSound))
+            return false;
+
+        return isSoundCulledLogical(id);
+    }
+
+    /**
+     * Sounds that stay active after the initial {@code play()} must not be discarded
+     * for distance or cull interval. Cancelling play prevents the engine from
+     * registering the instance, so a looping or tickable sound that starts out of
+     * range would never fade in when the listener later approaches.
+     */
+    public static boolean isPersistentSound(final SoundInstance sound) {
+        return sound.isLooping() || sound instanceof TickableSoundInstance || sound.canStartSilent();
     }
 
     /**

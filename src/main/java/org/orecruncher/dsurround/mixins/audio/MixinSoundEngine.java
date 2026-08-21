@@ -103,6 +103,12 @@ public abstract class MixinSoundEngine {
     @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/Vec3;<init>(DDD)V"), cancellable = true)
     private void dsurround_soundRangeCheck(SoundInstance soundInstance, CallbackInfo ci) {
         if (MixinHelpers.soundSystemConfig.enableSoundPruning) {
+            // Looping / tickable instances must stay registered so they can fade in when
+            // the player later moves into range. Cancelling play() here would drop them
+            // from the engine permanently.
+            if (SoundInstanceHandler.isPersistentSound(soundInstance))
+                return;
+
             // If not in range of the listener, cancel.
             if (!SoundInstanceHandler.inRange(AudioUtilities.getSoundListener().getListenerPosition(), soundInstance, 4)) {
                 MixinHelpers.LOGGER.debug(Configuration.Flags.BASIC_SOUND_PLAY, () -> "TOO FAR: " + AudioUtilities.debugString(soundInstance));
