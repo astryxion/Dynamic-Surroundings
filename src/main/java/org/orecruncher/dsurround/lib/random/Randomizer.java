@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.orecruncher.dsurround.lib.Library;
 
 import java.util.function.Supplier;
-import java.util.random.RandomGeneratorFactory;
 
 /**
  * Pluggable randomizer instances to be used. At the time of this checking, the Java randomizer "Xoroshiro128PlusPlus"
@@ -84,20 +83,25 @@ public final class Randomizer implements IRandomizer {
     }
 
     private static IRandomizer getRandomizer() {
-        try {
-            Library.LOGGER.info("Creating RandomGenerator '%s'", JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
-            return new JavaRandomizer(JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
-        } catch (Exception ex) {
-            Library.LOGGER.error(ex, "Unable to create randomizer!");
-            Library.LOGGER.info("RandomGenerator factories available:");
+        IRandomizer randomizer = tryCreateJavaRandomizer(JavaRandomizer.XOROSHIRO_128_PLUS_PLUS);
+        if (randomizer != null)
+            return randomizer;
 
-            RandomGeneratorFactory.all()
-                    .map(RandomGeneratorFactory::name)
-                    .sorted()
-                    .forEach(Library.LOGGER::info);
-        }
+        randomizer = tryCreateJavaRandomizer(JavaRandomizer.SPLITTABLE_RANDOM);
+        if (randomizer != null)
+            return randomizer;
 
         Library.LOGGER.info("Falling back to Minecraft randomizer");
         return new MinecraftRandomizer();
+    }
+
+    private static IRandomizer tryCreateJavaRandomizer(String algorithm) {
+        try {
+            Library.LOGGER.info("Creating RandomGenerator '%s'", algorithm);
+            return new JavaRandomizer(algorithm);
+        } catch (Exception ex) {
+            Library.LOGGER.info("RandomGenerator '%s' is unavailable (%s)", algorithm, ex.getMessage());
+            return null;
+        }
     }
 }

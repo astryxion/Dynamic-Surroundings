@@ -6,8 +6,6 @@ import org.orecruncher.dsurround.lib.Library;
 import org.orecruncher.dsurround.lib.version.SemanticVersion;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,8 +14,7 @@ import java.util.Optional;
 
 public final class ModInformation implements IMinecraftDirectories {
 
-    // TODO: Move into external resources?
-    private static final URI modUpdate = URI.create("https://raw.githubusercontent.com/OreCruncher/DynamicSurroundingsFabric/main/versions.json");
+    // This fork does not publish a versions.json; skip the remote check.
     private static final String modCurseForge = "https://www.curseforge.com/minecraft/mc-mods/dynamic-surroundings-fabric-edition";
     private static final String modModrinth = "https://modrinth.com/mod/dynamicsurroundingsfabric";
 
@@ -66,10 +63,6 @@ public final class ModInformation implements IMinecraftDirectories {
     }
 
     public Optional<URL> getUpdateUrl() {
-        try {
-            return Optional.of(modUpdate.toURL());
-        } catch (MalformedURLException ignored) {
-        }
         return Optional.empty();
     }
 

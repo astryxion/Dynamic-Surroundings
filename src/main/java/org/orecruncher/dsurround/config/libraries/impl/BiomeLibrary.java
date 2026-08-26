@@ -34,6 +34,7 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     private static final String FILE_NAME = "biomes.json";
     private static final Codec<List<BiomeConfigRule>> CODEC = Codec.list(BiomeConfigRule.CODEC);
+    private static final ResourceLocation UNKNOWN_BIOME_ID = new ResourceLocation("dsurround", "unknown_biome");
 
     private final IModLog logger;
     private final BiomeConditionEvaluator biomeConditionEvaluator;
@@ -60,6 +61,12 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
         if (scope == IReloadEvent.Scope.TAGS) {
             this.logger.info("[BiomeLibrary] received tag update notification; version is now %d", this.version);
+            // Tags can arrive before the first resource reload. Make sure synthetic biomes exist
+            // so sound/fog handlers never see a null PLAYER/VILLAGE entry.
+            if (this.internalBiomes.isEmpty()) {
+                for (var b : SyntheticBiome.values())
+                    initializeSyntheticBiome(b);
+            }
             return;
         }
 
@@ -139,7 +146,12 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     @Override
     public BiomeInfo getBiomeInfo(SyntheticBiome biome) {
-        return this.internalBiomes.get(biome);
+        var info = this.internalBiomes.get(biome);
+        if (info == null) {
+            initializeSyntheticBiome(biome);
+            info = this.internalBiomes.get(biome);
+        }
+        return info;
     }
 
     @Override
@@ -192,7 +204,9 @@ public final class BiomeLibrary implements IBiomeLibrary {
 
     private static ResourceLocation getBiomeId(Biome biome) {
         return RegistryUtils.getRegistryEntry(Registries.BIOME, biome)
-                .map(holder -> holder.unwrapKey().orElseThrow().location()).orElseThrow();
+                .flatMap(holder -> holder.unwrapKey().map(key -> key.location()))
+                .or(() -> RegistryUtils.getRegistry(Registries.BIOME).map(registry -> registry.getKey(biome)))
+                .orElse(UNKNOWN_BIOME_ID);
     }
 
     @Override

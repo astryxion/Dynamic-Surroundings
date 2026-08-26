@@ -16,6 +16,7 @@ public class ResourceLookupHelper {
     private final PackType packType;
 
     private Collection<Path> rootPaths;
+    private boolean warnedMissingRoots;
 
     public ResourceLookupHelper(PackType packType) {
         this.packType = packType;
@@ -24,11 +25,17 @@ public class ResourceLookupHelper {
 
     public void refresh() {
         this.rootPaths = this.getResourceRootPaths();
+        this.warnedMissingRoots = false;
     }
 
     public Collection<Path> findResourcePaths(String fileNamePattern) {
         if (this.rootPaths.isEmpty())
-            Library.LOGGER.warn("No root paths defined for ResourceLookupHelper");
+            this.refresh();
+
+        if (this.rootPaths.isEmpty() && !this.warnedMissingRoots) {
+            this.warnedMissingRoots = true;
+            Library.LOGGER.debug("No root paths defined for ResourceLookupHelper");
+        }
 
         return this.rootPaths.stream()
                 .map(path -> this.findPath(fileNamePattern, path))

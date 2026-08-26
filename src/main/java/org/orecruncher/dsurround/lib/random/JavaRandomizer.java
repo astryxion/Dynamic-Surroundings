@@ -16,20 +16,24 @@ final class JavaRandomizer implements IRandomizer {
 
     // https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/random/package-summary.html
     public static final String XOROSHIRO_128_PLUS_PLUS = "Xoroshiro128PlusPlus";
+    public static final String SPLITTABLE_RANDOM = "SplittableRandom";
 
+    private final String algorithm;
     private final RandomGenerator generator;
 
     public JavaRandomizer(String algorithm) {
+        this.algorithm = algorithm;
         this.generator = RandomGeneratorFactory.of(algorithm).create();
     }
 
     public JavaRandomizer(String algorithm, final long seed) {
+        this.algorithm = algorithm;
         this.generator = RandomGeneratorFactory.of(algorithm).create(seed);
     }
 
     @Override
     public @NotNull RandomSource fork() {
-        return new JavaRandomizer(XOROSHIRO_128_PLUS_PLUS, this.nextLong());
+        return new JavaRandomizer(this.algorithm, this.nextLong());
     }
 
     @Override

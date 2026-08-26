@@ -175,6 +175,11 @@ public final class Client {
             AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.TAGS);
         }, HandlerPriority.VERY_HIGH);
 
+        // Initial resource reload can happen before these handlers exist. Load configs now
+        // so synthetic biomes and dsconfigs are available when a world is joined.
+        var resourceUtilities = ResourceUtilities.createForCurrentState();
+        AssetLibraryEvent.RELOAD.raise().onReload(resourceUtilities, IReloadEvent.Scope.RESOURCES);
+
         // Add our fog handler
         container.registerSingleton(HolisticFogRangeCalculator.class);
         ContainerManager.resolve(HolisticFogRangeCalculator.class);

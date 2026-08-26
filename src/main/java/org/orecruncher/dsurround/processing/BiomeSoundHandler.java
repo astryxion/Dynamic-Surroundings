@@ -95,8 +95,10 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
             final ObjectArray<ISoundFactory> playerSounds = new ObjectArray<>();
             final BiomeInfo internalPlayerBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.PLAYER);
             final BiomeInfo internalVillageBiomeInfo = this.biomeLibrary.getBiomeInfo(SyntheticBiome.VILLAGE);
-            playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
-            playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
+            if (internalPlayerBiomeInfo != null)
+                playerSounds.addAll(internalPlayerBiomeInfo.findBiomeSoundMatches());
+            if (internalVillageBiomeInfo != null)
+                playerSounds.addAll(internalVillageBiomeInfo.findBiomeSoundMatches());
             playerSounds.forEach(fx -> this.workMap.put(fx, 1.0F));
 
             // This will cause extra spot sounds to play, like birds chirping, wolves growling, etc.
@@ -114,6 +116,9 @@ public final class BiomeSoundHandler extends AbstractClientHandler {
     }
 
     private void handleAddOnSounds(Player player, BiomeInfo info) {
+        if (info == null)
+            return;
+
         info.getExtraSound(SoundEventType.MOOD, RANDOM).ifPresent(s -> {
             var instance = s.createAsMood(player, MOOD_SOUND_MIN_RANGE, MOOD_SOUND_MAX_RANGE);
             this.audioPlayer.play(instance);

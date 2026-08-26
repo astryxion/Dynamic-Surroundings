@@ -85,8 +85,12 @@ public class BiomeFogRangeCalculator extends VanillaFogRangeCalculator {
         while(iterator.hasNext()) {
             var p = iterator.next();
             final Biome b = biomeManager.getNoiseBiomeAtPosition(p).value();
-            final BiomeInfo info = this.biomeLibrary.getBiomeInfo(b);
-            intensityAccum += info.getFogDensity().getIntensity();
+            try {
+                final BiomeInfo info = this.biomeLibrary.getBiomeInfo(b);
+                intensityAccum += info.getFogDensity().getIntensity();
+            } catch (Exception ignored) {
+                // Unknown or unregistered biomes should not crash fog sampling.
+            }
             intensityCount++;
         }
 

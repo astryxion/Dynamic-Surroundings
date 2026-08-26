@@ -71,7 +71,7 @@ public class Configuration extends ConfigurationData {
 
         @Property
         @Comment("Enable/disable chat window notification of newer updates available")
-        public boolean enableModUpdateChatMessage = true;
+        public boolean enableModUpdateChatMessage = false;
 
         @Property
         @Comment("Enable/disable filtering display of tags in the diagnostics overlay")

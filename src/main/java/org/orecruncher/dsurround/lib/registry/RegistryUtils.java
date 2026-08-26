@@ -20,7 +20,12 @@ public class RegistryUtils {
 
     public static <T> Optional<Holder.Reference<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, T instance) {
         return getRegistry(registryKey)
-                .flatMap(r -> r.getHolder(r.getId(instance)));
+                .flatMap(r -> {
+                    int id = r.getId(instance);
+                    if (id < 0)
+                        return Optional.empty();
+                    return r.getHolder(id);
+                });
     }
 
     public static <T> Optional<Holder.Reference<T>> getRegistryEntry(ResourceKey<Registry<T>> registryKey, ResourceLocation location) {
