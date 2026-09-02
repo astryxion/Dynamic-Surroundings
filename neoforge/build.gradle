@@ -1,0 +1,97 @@
+plugins {
+    id 'com.gradleup.shadow'
+}
+
+architectury {
+    platformSetupLoomIde()
+    neoForge()
+}
+
+loom {
+    accessWidenerPath = project(":common").loom.accessWidenerPath
+}
+
+configurations {
+    common {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+    compileClasspath.extendsFrom common
+    runtimeClasspath.extendsFrom common
+    developmentNeoForge.extendsFrom common
+
+    shadowBundle {
+        canBeResolved = true
+        canBeConsumed = false
+    }
+}
+
+repositories {
+    maven {
+        name = 'NeoForged'
+        url = 'https://maven.neoforged.net/releases'
+    }
+}
+
+dependencies {
+    neoForge "net.neoforged:neoforge:$rootProject.neoforge_version"
+    modImplementation "dev.architectury:architectury-neoforge:$rootProject.architectury_api_version"
+
+    common(project(path: ':common', configuration: 'namedElements')) { transitive false }
+    shadowBundle project(path: ':common', configuration: 'transformProductionNeoForge')
+
+    implementation "org.openjdk.nashorn:nashorn-core:${rootProject.nashorn_version}"
+    include("org.openjdk.nashorn:nashorn-core:${rootProject.nashorn_version}")
+
+    // NeoForge 21.11.45 ships MixinExtras 0.5.3, which ClassCastExceptions on @Redirect
+    // when `at` is stored as ArrayList. JiJ 0.5.5 so NeoForge matches Fabric Loader.
+    implementation "io.github.llamalad7:mixinextras-neoforge:${rootProject.mixinextras_version}"
+    include("io.github.llamalad7:mixinextras-neoforge:${rootProject.mixinextras_version}")
+
+    modImplementation "com.github.glitchfiend:TerraBlender-neoforge:${minecraft_version}-${rootProject.terrablender_version}"
+    modImplementation "com.github.glitchfiend:GlitchCore-neoforge:${minecraft_version}-${rootProject.glitchcore_version}"
+    modImplementation "com.github.glitchfiend:SereneSeasons-neoforge:${minecraft_version}-${rootProject.serene_seasons_version}"
+    modImplementation "com.github.glitchfiend:BiomesOPlenty-neoforge:${minecraft_version}-${rootProject.bop_version}"
+
+    modApi("me.shedaniel.cloth:cloth-config-neoforge:${rootProject.clothapi_version}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
+}
+
+processResources {
+    var expandProps = [
+            version: project.version,
+            mod_id: rootProject.name,
+            mod_name: rootProject.mod_name,
+            mod_description: rootProject.mod_description,
+            mod_author: rootProject.mod_author,
+            mod_credits: rootProject.mod_credits,
+            mod_license: rootProject.mod_license,
+            mod_issues_url: rootProject.mod_issues_url,
+            mod_homepage_url: rootProject.mod_homepage_url
+    ]
+
+    inputs.properties(expandProps)
+
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand expandProps
+    }
+
+    into('/') {
+        from("$projectDir/../CREDITS.md")
+        from("$projectDir/../LICENSE")
+    }
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowBundle]
+    archiveClassifier = 'dev-shadow'
+}
+
+remapJar {
+    inputFile.set shadowJar.archiveFile
+    dependsOn shadowJar
+    archiveClassifier = null
+}
+
+shadow.addShadowVariantIntoJavaComponent = false
