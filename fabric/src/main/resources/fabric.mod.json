@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "dsurround",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${mod_description}",
+  "authors": [
+    "${mod_author}"
+  ],
+  "contributors": [
+    "OreCruncher",
+    "Sound Contributors"
+  ],
+  "contact": {
+    "issues": "${mod_issues_url}",
+    "homepage": "${mod_homepage_url}"
+  },
+  "license": "${mod_license}",
+  "icon": "assets/dsurround/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.orecruncher.fabric.FabricMod"
+    ],
+    "modmenu": [
+      "org.orecruncher.fabric.ModConfigMenu"
+    ]
+  },
+  "mixins": [
+    "dsurround.mixins.json",
+    "dsurround.mixins.fabric.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": ">=26.1",
+    "java": ">=25",
+    "architectury": ">=20.0.4",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "cloth-config": ">=26.1.154"
+  },
+  "custom": {
+    "modmenu": {
+      "links": {
+        "dsurround.mod.link.sources": "https://github.com/astryxion/Dynamic-Surroundings",
+        "dsurround.mod.link.credits": "https://github.com/astryxion/Dynamic-Surroundings",
+        "dsurround.mod.link.nashorn": "https://github.com/openjdk/nashorn"
+      }
+    }
+  }
+}

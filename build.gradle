@@ -1,101 +1,89 @@
 plugins {
-    id 'dev.architectury.loom' version '1.4.390'
-    id 'architectury-plugin' version '3.4-SNAPSHOT'
-    id 'maven-publish'
+    id 'dev.architectury.loom-no-remap' version '1.17-SNAPSHOT' apply false
+    id 'architectury-plugin' version '3.5-SNAPSHOT'
+    id 'com.gradleup.shadow' version '9.6.1' apply false
 }
 
 architectury {
     minecraft = project.minecraft_version
-    platformSetupLoomIde()
-    forge()
 }
 
-group = rootProject.maven_group
-version = rootProject.mod_version
-
-base {
-    archivesName = rootProject.archives_base_name
+allprojects {
+    group = rootProject.maven_group
+    version = rootProject.mod_version
 }
 
-repositories {
-    maven { url "https://maven.minecraftforge.net/" }
-    maven { url "https://maven.shedaniel.me/" }
-    maven { url "https://maven.glitch.solutions/releases" }
-}
+subprojects {
+    apply plugin: 'dev.architectury.loom-no-remap'
+    apply plugin: 'architectury-plugin'
+    apply plugin: 'maven-publish'
 
-loom {
-    silentMojangMappingsLicense()
-    accessWidenerPath = file("src/main/resources/dsurround.accesswidener")
+    base {
+        // Set up a suffixed format for the mod jar names, e.g. `example-fabric`.
+        archivesName = "$rootProject.archives_name-$project.name"
+    }
 
-    mods {
-        dsurround {
-            sourceSet sourceSets.main
+    repositories {
+        // Add repositories to retrieve artifacts from in here.
+        // You should only use this when depending on other mods because
+        // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+        // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+        // for more information about repositories.
+        maven { url "https://maven.neoforged.net/releases/" }
+        maven { url "https://maven.minecraftforge.net/" }
+        maven { url "https://maven.shedaniel.me/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.terraformersmc.com/releases/" }
+        maven { url "https://maven.isxander.dev/releases" }
+    }
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${rootProject.architectury.minecraft}"
+    }
+
+    java {
+        // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+        // if it is present.
+        // If you remove this line, sources will not be generated.
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = 25
+    }
+
+    afterEvaluate {
+        if (project.name != "common" && project.name != "stubs" && tasks.findByName('shadowJar') != null) {
+            tasks.register('copyJarToMain', Copy) {
+                duplicatesStrategy = DuplicatesStrategy.INCLUDE
+                from tasks.named('shadowJar')
+                into "../build/libs"
+            }
         }
     }
 
-    forge {
-        mixinConfig "dsurround.mixins.json"
-        convertAccessWideners = true
-        extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
-    }
-}
+    // Configure Maven publishing.
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                artifactId = base.archivesName.get()
+                from components.java
+            }
+        }
 
-dependencies {
-    minecraft "net.minecraft:minecraft:$rootProject.minecraft_version"
-    mappings loom.officialMojangMappings()
-
-    forge "net.minecraftforge:forge:$rootProject.minecraft_version-$rootProject.forge_version"
-
-    modImplementation "dev.architectury:architectury-forge:$rootProject.architectury_api_version"
-
-    implementation "org.openjdk.nashorn:nashorn-core:${rootProject.nashorn_version}"
-    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5"))
-    implementation(include("io.github.llamalad7:mixinextras-forge:0.3.5"))
-
-    modCompileOnly("me.shedaniel.cloth:cloth-config-forge:${rootProject.clothapi_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
-    modCompileOnly "com.github.glitchfiend:SereneSeasons-forge:${minecraft_version}-${rootProject.serene_seasons_version}"
-}
-
-processResources {
-    var expandProps = [
-            version: project.version,
-            mod_id: rootProject.name,
-            mod_name: rootProject.mod_name,
-            mod_description: rootProject.mod_description,
-            mod_author: rootProject.mod_author,
-            mod_credits: rootProject.mod_credits,
-            mod_license: rootProject.mod_license
-    ]
-
-    inputs.properties(expandProps)
-
-    filesMatching('META-INF/mods.toml') {
-        expand expandProps
-    }
-
-    into('/') {
-        from("$projectDir/LICENSE")
-    }
-}
-
-java {
-    withSourcesJar()
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 17
-    it.options.compilerArgs += ['-Xmaxerrs', '10000']
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId = base.archivesName.get()
-            from components.java
+        // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+        repositories {
+            // Add repositories to publish to here.
+            // Notice: This block does NOT have the same function as the block in the top level.
+            // The repositories here will be used for publishing your artifact, not for
+            // retrieving dependencies.
         }
     }
 }

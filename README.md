@@ -6,7 +6,7 @@ Alters the fabric of Minecraft experience by weaving a tapestry of sound and vis
 
 **Author:** Astryxion
 
-**Credits:** OreCruncher
+**Credits:** OreCruncher, Sound Contributors
 
 ## License
 
